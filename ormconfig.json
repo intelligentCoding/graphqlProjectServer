@@ -1,0 +1,16 @@
+{
+    "type": "postgres",
+    "host": "localhost",
+    "port": 5432,
+    "database": "postgres",
+    "username": "postgres",
+    "password": "postgres",
+    "logging": true,
+    "synchronize": true,
+  "entities": [
+    "dist/entities/Fruits.js",
+    "dist/entities/User.js",
+    "dist/entities/UserFruits.js"
+  ],
+  "migrations": ["dist/migrations/*.js"]
+}
