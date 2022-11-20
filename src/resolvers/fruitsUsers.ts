@@ -8,7 +8,7 @@ import {
   Resolver,
   UseMiddleware,
 } from "type-graphql";
-import { auth } from "../auth";
+import { adminAuth, auth } from "../auth";
 import { getConnection } from "typeorm";
 import { UserFruits } from "../entities/UserFruits";
 import { ApolloError } from "apollo-server-errors";
@@ -62,7 +62,7 @@ export class UserFruitsResolver {
   }
 
   @Mutation(() => UserFruits)
-  @UseMiddleware(auth)
+  @UseMiddleware(adminAuth)
   async updateUserFruits(
     @Arg("updateFruitUsersInput") updateFruitUsersInput: UpdateFruitUsersInput,
   ): Promise<UserFruits | null> {
@@ -82,7 +82,7 @@ export class UserFruitsResolver {
   }
 
   @Mutation(() => UserFruits)
-  @UseMiddleware(auth)
+  @UseMiddleware(adminAuth)
   async createFruitUsers(
     @Arg("creatFruitUsersInput") creatFruitUsersInput: CreatFruitUsersInput,
   ): Promise<UserFruits> {

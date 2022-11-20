@@ -7,10 +7,11 @@
     "password": "postgres",
     "logging": true,
     "synchronize": true,
+  "migrations": ["dist/migrations/*.js"],
   "entities": [
     "dist/entities/Fruits.js",
     "dist/entities/User.js",
-    "dist/entities/UserFruits.js"
-  ],
-  "migrations": ["dist/migrations/*.js"]
+    "dist/entities/UserFruits.js",
+    "dist/entities/Roles.js"
+  ]
 }

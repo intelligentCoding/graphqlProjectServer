@@ -6,7 +6,7 @@ import {
   Resolver,
   UseMiddleware,
 } from "type-graphql";
-import { auth } from "../auth";
+import { adminAuth, auth } from "../auth";
 import { getConnection } from "typeorm";
 import { Fruits } from "../entities/Fruits";
 import { ApolloError } from "apollo-server-express";
@@ -41,7 +41,7 @@ export class FruitsResolver {
   }
 
   @Mutation(() => Fruits)
-  @UseMiddleware(auth)
+  @UseMiddleware(adminAuth)
   async updateFruits(
     @Arg("id", () => Int) id: number,
     @Arg("name", () => String) name: string,
@@ -59,7 +59,7 @@ export class FruitsResolver {
   }
 
   @Mutation(() => Fruits)
-  @UseMiddleware(auth)
+  @UseMiddleware(adminAuth)
   async createFruits(
     @Arg("name", () => String) name: string,
   ): Promise<Fruits> {
@@ -79,7 +79,7 @@ export class FruitsResolver {
   }
 
   @Mutation(() => Boolean)
-  @UseMiddleware(auth)
+  @UseMiddleware(adminAuth)
   async deleteFruit(
     @Arg("id", () => Int) id: number,
     ): Promise<boolean> {

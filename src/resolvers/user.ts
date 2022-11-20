@@ -17,9 +17,11 @@ import {
   UseMiddleware,
 } from "type-graphql";
 import { getConnection, In, Not } from "typeorm";
-import { auth } from "../auth";
+import { adminAuth, auth } from "../auth";
 import { Fruits } from "../entities/Fruits";
 import { UserFruits } from "../entities/UserFruits";
+import { Roles } from "../entities/Roles";
+import { ApolloError } from "apollo-server-express";
 
 declare module "express-session" {
   export interface SessionData {
@@ -34,6 +36,13 @@ class LoginInput {
   @Field()
   password: string;
 }
+@ObjectType()
+class AuthResponse {
+  @Field()
+  user?: User
+  @Field()
+  isAdmin: boolean
+}
 
 @InputType()
 class RegisterInput extends LoginInput {
@@ -45,6 +54,8 @@ class RegisterInput extends LoginInput {
   min: number;
   @Field()
   max: number;
+  @Field()
+  isAdmin: boolean
 }
 
 @ObjectType()
@@ -65,17 +76,24 @@ class UserResponse {
 @Resolver(() => User)
 export class UserResolver {
   //Find user
-  @Query(() => User, { nullable: true })
+  @Query(() => AuthResponse)
   async user(@Ctx() { req }: Mycontext) {
     if (!req.session.userId) {
       return null;
     }
-    return User.findOne(req.session.userId);
+    const user = await User.findOne(req.session.userId, {
+      relations: ['role']
+    });
+    
+    return {
+      user: user,
+      isAdmin: user?.role.name === 'ADMIN'
+    }
   }
   //Find user
   @Query(() => User, { nullable: true })
   async userById(@Arg("id", () => Int) id: number) {
-    return User.findOne(id);
+    return await User.findOne(id);
   }
 
   @FieldResolver(() => [Fruits], { nullable: true })
@@ -91,7 +109,7 @@ export class UserResolver {
       },
       relations:['fruits']
     })
-    
+
     const selectedFruitsIds = selectedFruit.map(sf => sf.fruits.id)
     return await Fruits.find({
       where: {
@@ -104,11 +122,28 @@ export class UserResolver {
   @UseMiddleware(auth)
   async users() {
     const users =  await User.find({
-      relations: ["fruitsUsers"]
+      relations: ["fruitsUsers", 'role']
     });
     return users
   }
 
+  //Update
+  @Mutation(() => User)
+  @UseMiddleware(adminAuth)
+  async updateUser(
+    @Arg("userId", () => Int) userId: number,
+    @Arg("min", () => Int) min: number,
+    @Arg("max", () => Int) max: number,
+  ): Promise<User> {
+    const user = await User.findOne(userId)
+    if(!user) {
+      throw new ApolloError('User Not found', "USER_NOT_FOUND")
+    }
+    user.min = min
+    user.max = max
+    user.save()
+    return user
+  }
 
   //Register
   @Mutation(() => UserResponse)
@@ -142,6 +177,12 @@ export class UserResolver {
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(options.password, salt);
     let user;
+    //Add roles
+    const role = await Roles.findOne({
+      where: {
+        name: options.isAdmin ? 'ADMIN' : "USER"
+      }
+    })
     try {
       const results = await getConnection().createQueryBuilder().insert().into(User).values({
         firstName: options.firstName,
@@ -150,6 +191,9 @@ export class UserResolver {
         min: options.min,
         max: options.max,
         password: hashedPassword,
+        role: {
+          id: role?.id
+        }
       }
       ).returning('*').execute();
       user = results.raw[0];
@@ -223,7 +267,6 @@ export class UserResolver {
     return new Promise((resolve) => req.session.destroy(err => {
       res.clearCookie('tid');
       if(err) {
-        console.log(err);
         resolve(false);
         return;
       }

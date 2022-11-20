@@ -9,12 +9,10 @@ import session from "express-session";
 import { Mycontext } from "./types";
 import cors from "cors";
 import { createConnection } from 'typeorm'
-import { User } from "./entities/User";
 import path from "path";
-import { Fruits } from "./entities/Fruits";
-import { UserFruits } from "./entities/UserFruits";
 import { FruitsResolver } from "./resolvers/fruits";
 import { UserFruitsResolver } from "./resolvers/fruitsUsers";
+import { connectionEntities } from "./connectionEntities";
 const main = async () => {
     
     const conn = await createConnection({
@@ -26,8 +24,8 @@ const main = async () => {
       password: 'postgres',
       logging: true,
       synchronize: true,
-      entities: [User, Fruits, UserFruits],
       migrations: [path.join(__dirname, "./migrations/*")],
+      entities: connectionEntities
     })
 
   await conn.runMigrations();

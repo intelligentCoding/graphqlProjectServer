@@ -9,7 +9,9 @@
     "replace:paths": "tscpaths -p tsconfig.json -s ./src -o ./dist",
     "dev": "nodemon dist/index.js",
     "start": "tsc && node dist/index.js",
-    "migration:generate": "yarn build && typeorm migration:generate -f ormconfig.json -d src/migrations"
+    "migration:generate": "yarn build && typeorm migration:generate -f ormconfig.json -d src/migrations",
+    "migration:create": "yarn build && typeorm migration:create -f ormconfig.json -d src/migrations",
+    "migration:revert": "yarn build && typeorm migration:revert -f ormconfig.json"
   },
   "keywords": [],
   "author": "",
